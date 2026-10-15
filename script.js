@@ -65,12 +65,14 @@ function playSound(type) {
   }
 }
 
-// Event listener saat pengguna mengetik di textarea
-quoteInputElement.addEventListener("input", () => {
+// Fungsi pengecekan input ketikan
+function checkInput() {
   const arrayQuote = quoteDisplayElement.querySelectorAll("span");
-  const arrayValue = quoteInputElement.value.split("");
+  const inputValue = quoteInputElement.value;
+  const arrayValue = inputValue.split("");
 
   let correct = true;
+  
   arrayQuote.forEach((characterSpan, index) => {
     const character = arrayValue[index];
     if (character == null) {
@@ -87,14 +89,18 @@ quoteInputElement.addEventListener("input", () => {
     }
   });
 
-  // Jika semua karakter sudah benar (Selesai!)
-  if (correct) {
+  // Jika semua karakter benar DAN panjang input sudah sama persis dengan quote
+  if (correct && arrayValue.length === arrayQuote.length) {
     playSound('finish'); // Mainkan suara selesai
     setTimeout(() => {
       renderNewQuote();
     }, 300); // Beri jeda sebentar sebelum quote baru muncul
   }
-});
+}
+
+// Event listener untuk input standar dan event composition (khusus iOS/keyboard prediksi)
+quoteInputElement.addEventListener("input", checkInput);
+quoteInputElement.addEventListener("compositionend", checkInput);
 
 // Ambil quote acak dari array LOCAL_QUOTES
 function getRandomQuote() {
