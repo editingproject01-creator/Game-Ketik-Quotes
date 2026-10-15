@@ -1,4 +1,4 @@
-// Array quote bahasa Indonesia yang bisa kamu edit/tambah sesuka hati
+// Array quote bahasa Indonesia
 const LOCAL_QUOTES = [
   "Ketika cinta tidak diterima, Berpindahlah. Ketika cinta tidak dihargai, Menjauhlah. Semoga waktu akan mengajarkan apa itu Cinta Sejati yang sesungguhnya.",
   "Jika Allah mengizinkanmu berdoa untuk sesuatu, artinya Allah mengizinkanmu untuk mendapatkannya. Jadi ulangi terus doanya, ulangi terus usahanya, sampai Allah bilang, Ini Waktunya.",
@@ -46,18 +46,16 @@ function playSound(type) {
   gain.connect(audioCtx.destination);
 
   if (type === 'start') {
-    // Suara saat Quote Baru Masuk (Pop ringkas)
     osc.type = 'sine';
-    osc.frequency.setValueAtTime(440, audioCtx.currentTime); // Nada A4
+    osc.frequency.setValueAtTime(440, audioCtx.currentTime);
     gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.15);
     osc.start();
     osc.stop(audioCtx.currentTime + 0.15);
   } else if (type === 'finish') {
-    // Suara Fanfare/Menang saat Selesai Ketik (2 nada naik)
     osc.type = 'triangle';
-    osc.frequency.setValueAtTime(523.25, audioCtx.currentTime); // Nada C5
-    osc.frequency.setValueAtTime(659.25, audioCtx.currentTime + 0.1); // Nada E5
+    osc.frequency.setValueAtTime(523.25, audioCtx.currentTime);
+    osc.frequency.setValueAtTime(659.25, audioCtx.currentTime + 0.1);
     gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.35);
     osc.start();
@@ -65,7 +63,7 @@ function playSound(type) {
   }
 }
 
-// Fungsi pengecekan input ketikan yang kompatibel dengan iOS & PC
+// Fungsi pengecekan input ketikan
 function checkInput() {
   const arrayQuote = quoteDisplayElement.querySelectorAll("span");
   const inputValue = quoteInputElement.value;
@@ -89,38 +87,42 @@ function checkInput() {
     }
   });
 
-  // Ambil teks asli quote dan teks hasil ketikan (bersihkan spasi berlebih di akhir)
-  const rawQuoteText = quoteDisplayElement.innerText.trim();
-  const typedText = inputValue.trim();
+  // Teks bersih tanpa spasi ganda/spasi gaib iOS
+  const rawQuoteText = quoteDisplayElement.innerText.replace(/\s+/g, ' ').trim();
+  const typedText = inputValue.replace(/\s+/g, ' ').trim();
 
-  // Jika teks ketikan sudah sama persis dengan quote
-  if (typedText === rawQuoteText && correct) {
-    playSound('finish'); // Mainkan suara selesai
+  // Cek apakah semua huruf di layar sudah hijau
+  const isAllSpanCorrect = Array.from(arrayQuote).length > 0 && Array.from(arrayQuote).every(span => span.classList.contains("correct"));
+
+  // Jika teks cocok ATAU semua huruf span sudah hijau
+  if ((typedText === rawQuoteText || isAllSpanCorrect) && correct) {
+    playSound('finish');
     setTimeout(() => {
       renderNewQuote();
-    }, 300); // Beri jeda sebentar sebelum quote baru muncul
+    }, 300);
   }
 }
 
-// Event listener lengkap agar responsif di iOS/Safari & Android/Chrome
+// Event listener lengkap agar mendeteksi klik "Selesai", "Kembali", dan ketikan keyboard iOS
 quoteInputElement.addEventListener("input", checkInput);
 quoteInputElement.addEventListener("keyup", checkInput);
 quoteInputElement.addEventListener("compositionend", checkInput);
+quoteInputElement.addEventListener("change", checkInput);
+quoteInputElement.addEventListener("blur", checkInput); // Mendeteksi saat tombol 'Selesai' diklik & keyboard ditutup
 
-// Ambil quote acak dari array LOCAL_QUOTES
+// Ambil quote acak
 function getRandomQuote() {
   const randomIndex = Math.floor(Math.random() * LOCAL_QUOTES.length);
   return LOCAL_QUOTES[randomIndex];
 }
 
-// Render quote baru ke tampilan
+// Render quote baru
 function renderNewQuote() {
-  playSound('start'); // Mainkan suara saat quote baru muncul
+  playSound('start');
 
   const quote = getRandomQuote();
   quoteDisplayElement.innerHTML = "";
   
-  // Bungkus setiap karakter dengan <span>
   quote.split("").forEach((character) => {
     const characterSpan = document.createElement("span");
     characterSpan.innerText = character;
