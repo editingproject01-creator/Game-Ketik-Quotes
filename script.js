@@ -65,7 +65,7 @@ function playSound(type) {
   }
 }
 
-// Fungsi pengecekan input ketikan
+// Fungsi pengecekan input ketikan yang kompatibel dengan iOS & PC
 function checkInput() {
   const arrayQuote = quoteDisplayElement.querySelectorAll("span");
   const inputValue = quoteInputElement.value;
@@ -89,8 +89,12 @@ function checkInput() {
     }
   });
 
-  // Jika semua karakter benar DAN panjang input sudah sama persis dengan quote
-  if (correct && arrayValue.length === arrayQuote.length) {
+  // Ambil teks asli quote dan teks hasil ketikan (bersihkan spasi berlebih di akhir)
+  const rawQuoteText = quoteDisplayElement.innerText.trim();
+  const typedText = inputValue.trim();
+
+  // Jika teks ketikan sudah sama persis dengan quote
+  if (typedText === rawQuoteText && correct) {
     playSound('finish'); // Mainkan suara selesai
     setTimeout(() => {
       renderNewQuote();
@@ -98,8 +102,9 @@ function checkInput() {
   }
 }
 
-// Event listener untuk input standar dan event composition (khusus iOS/keyboard prediksi)
+// Event listener lengkap agar responsif di iOS/Safari & Android/Chrome
 quoteInputElement.addEventListener("input", checkInput);
+quoteInputElement.addEventListener("keyup", checkInput);
 quoteInputElement.addEventListener("compositionend", checkInput);
 
 // Ambil quote acak dari array LOCAL_QUOTES
