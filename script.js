@@ -27,6 +27,7 @@ const LOCAL_QUOTES = [
 const quoteDisplayElement = document.getElementById("quoteDisplay");
 const quoteInputElement = document.getElementById("quoteInput");
 const timerElement = document.getElementById("timer");
+const nextBtn = document.getElementById("nextBtn");
 
 let startTime;
 let timerInterval;
@@ -34,7 +35,6 @@ let timerInterval;
 // Initialize Web Audio API Context
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
-// Fungsi pembuat efek suara (beeps)
 function playSound(type) {
   if (audioCtx.state === 'suspended') {
     audioCtx.resume();
@@ -63,60 +63,53 @@ function playSound(type) {
   }
 }
 
-// Fungsi pengecekan input ketikan
+// Logika Pengecekan Ketikan
 function checkInput() {
   const arrayQuote = quoteDisplayElement.querySelectorAll("span");
   const inputValue = quoteInputElement.value;
   const arrayValue = inputValue.split("");
 
-  let correct = true;
+  let correctCount = 0;
   
   arrayQuote.forEach((characterSpan, index) => {
     const character = arrayValue[index];
     if (character == null) {
       characterSpan.classList.remove("correct");
       characterSpan.classList.remove("incorrect");
-      correct = false;
     } else if (character === characterSpan.innerText) {
       characterSpan.classList.add("correct");
       characterSpan.classList.remove("incorrect");
+      correctCount++;
     } else {
       characterSpan.classList.remove("correct");
       characterSpan.classList.add("incorrect");
-      correct = false;
     }
   });
 
-  // Teks bersih tanpa spasi ganda/spasi gaib iOS
-  const rawQuoteText = quoteDisplayElement.innerText.replace(/\s+/g, ' ').trim();
-  const typedText = inputValue.replace(/\s+/g, ' ').trim();
-
-  // Cek apakah semua huruf di layar sudah hijau
-  const isAllSpanCorrect = Array.from(arrayQuote).length > 0 && Array.from(arrayQuote).every(span => span.classList.contains("correct"));
-
-  // Jika teks cocok ATAU semua huruf span sudah hijau
-  if ((typedText === rawQuoteText || isAllSpanCorrect) && correct) {
+  // Jika ketikan otomatis selesai 100%
+  if (correctCount === arrayQuote.length && arrayQuote.length > 0) {
     playSound('finish');
     setTimeout(() => {
       renderNewQuote();
-    }, 300);
+    }, 200);
   }
 }
 
-// Event listener lengkap agar mendeteksi klik "Selesai", "Kembali", dan ketikan keyboard iOS
-quoteInputElement.addEventListener("input", checkInput);
-quoteInputElement.addEventListener("keyup", checkInput);
-quoteInputElement.addEventListener("compositionend", checkInput);
-quoteInputElement.addEventListener("change", checkInput);
-quoteInputElement.addEventListener("blur", checkInput); // Mendeteksi saat tombol 'Selesai' diklik & keyboard ditutup
+// Event listener untuk input
+["input", "keyup", "change", "compositionend"].forEach((evt) => {
+  quoteInputElement.addEventListener(evt, checkInput);
+});
 
-// Ambil quote acak
+// Event listener saat tombol Next diklik
+nextBtn.addEventListener("click", () => {
+  renderNewQuote();
+});
+
 function getRandomQuote() {
   const randomIndex = Math.floor(Math.random() * LOCAL_QUOTES.length);
   return LOCAL_QUOTES[randomIndex];
 }
 
-// Render quote baru
 function renderNewQuote() {
   playSound('start');
 
@@ -129,11 +122,10 @@ function renderNewQuote() {
     quoteDisplayElement.appendChild(characterSpan);
   });
 
-  quoteInputElement.value = null;
+  quoteInputElement.value = "";
   startTimer();
 }
 
-// Jalankan & Reset Timer
 function startTimer() {
   timerElement.innerText = 0;
   startTime = new Date();
@@ -149,5 +141,4 @@ function getTimerTime() {
   return Math.floor((new Date() - startTime) / 1000);
 }
 
-// Jalankan pertama kali saat halaman dibuka
 renderNewQuote();
